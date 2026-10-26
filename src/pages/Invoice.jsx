@@ -13,12 +13,11 @@ import {
   FiSave,
   FiMapPin,
   FiPackage,
-  FiCheckCircle,
   FiLoader,
   FiShare2,
   FiClock
 } from "react-icons/fi";
-import logoIcon from '../assets/caligraphy.logo.jpeg';  
+import logoIcon from '../assets/caligraphy.logo.jpeg';
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const itemVariants = { hidden: { y: 20, opacity: 0 }, show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } } };
@@ -43,7 +42,7 @@ const Invoice = () => {
   const [availableProducts, setAvailableProducts] = useState([]);
   const [shippingCharge, setShippingCharge] = useState("50");
   const [pincodeLoading, setPincodeLoading] = useState(false);
-  const [invoiceNumber, setInvoiceNumber] = useState("WE-100");
+  const [invoiceNumber, setInvoiceNumber] = useState("INV-100");
   const [loading, setLoading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -68,61 +67,61 @@ const Invoice = () => {
   }, []);
 
   // Prefill Data if Editing
-useEffect(() => {
-  const editInvoice = location.state?.editInvoice;
+  useEffect(() => {
+    const editInvoice = location.state?.editInvoice;
 
-  if (!editInvoice) return;
+    if (!editInvoice) return;
 
-  const formattedDate = editInvoice.invoiceDate
-    ? editInvoice.invoiceDate
-    : editInvoice.createdAt
-    ? new Date(
-        new Date(editInvoice.createdAt).getTime() -
+    const formattedDate = editInvoice.invoiceDate
+      ? editInvoice.invoiceDate
+      : editInvoice.createdAt
+        ? new Date(
+          new Date(editInvoice.createdAt).getTime() -
           new Date(editInvoice.createdAt).getTimezoneOffset() * 60000
-      )
-        .toISOString()
-        .split("T")[0]
-    : "";
+        )
+          .toISOString()
+          .split("T")[0]
+        : "";
 
-  // Single state update pattern
-  Promise.resolve().then(() => {
-    setEditId(editInvoice.id);
-    setInvoiceNumber(editInvoice.invoiceNumber || "");
-    setCustomer({
-      name: editInvoice.customerName || "",
-      phone: editInvoice.phone || "",
-      address: editInvoice.address || "",
-      place: editInvoice.place || "",
-      pincode: editInvoice.pincode || "",
-    });
+    // Single state update pattern
+    Promise.resolve().then(() => {
+      setEditId(editInvoice.id);
+      setInvoiceNumber(editInvoice.invoiceNumber || "");
+      setCustomer({
+        name: editInvoice.customerName || "",
+        phone: editInvoice.phone || "",
+        address: editInvoice.address || "",
+        place: editInvoice.place || "",
+        pincode: editInvoice.pincode || "",
+      });
 
-    setShippingCharge(
-      editInvoice.shippingCharge?.toString() || "0"
-    );
-
-    setPaymentStatus(
-      editInvoice.paymentStatus || "paid"
-    );
-
-    setInvoiceDate(formattedDate);
-
-    // Invoice Date
-    if (
-      editInvoice.products &&
-      editInvoice.products.length > 0
-    ) {
-      setInvoiceProducts(
-        editInvoice.products.map((p) => ({
-          id: p.id || Date.now() + Math.random(),
-          productId: p.productId || "",
-          productName: p.productName || "",
-          price: p.price || "",
-          quantity: p.quantity || 1,
-        }))
+      setShippingCharge(
+        editInvoice.shippingCharge?.toString() || "0"
       );
-    }
-  });
-}, [location.state?.editInvoice]);
+
+      setPaymentStatus(
+        editInvoice.paymentStatus || "paid"
+      );
+
+      setInvoiceDate(formattedDate);
+
+      // Invoice Date
+      if (
+        editInvoice.products &&
+        editInvoice.products.length > 0
+      ) {
+        setInvoiceProducts(
+          editInvoice.products.map((p) => ({
+            id: p.id || Date.now() + Math.random(),
+            productId: p.productId || "",
+            productName: p.productName || "",
+            price: p.price || "",
+            quantity: p.quantity || 1,
+          }))
+        );
+      }
+    });
+  }, [location.state?.editInvoice]);
 
   // Fetch Invoices for Auto-increment Number
   useEffect(() => {
@@ -134,19 +133,22 @@ useEffect(() => {
         const invoicesList = Object.values(data);
         let maxNum = 99;
         invoicesList.forEach(inv => {
-          if (inv.invoiceNumber && inv.invoiceNumber.startsWith("WE-")) {
-            const num = parseInt(inv.invoiceNumber.replace("WE-", ""));
-            if (!isNaN(num) && num > maxNum) {
-              maxNum = num;
+          if (inv.invoiceNumber) {
+            const match = inv.invoiceNumber.match(/^(?:INV|WE)-(\d+)$/i);
+            if (match) {
+              const num = parseInt(match[1], 10);
+              if (!isNaN(num) && num > maxNum) {
+                maxNum = num;
+              }
             }
           }
         });
-        setInvoiceNumber(`WE-${maxNum + 1}`);
+        setInvoiceNumber(`INV-${maxNum + 1}`);
       } else {
-        setInvoiceNumber("WE-100");
+        setInvoiceNumber("INV-100");
       }
-    }); 
-  }, [location.state, editId]);  
+    });
+  }, [location.state, editId]);
 
   const handleCustomerChange = (e) => setCustomer({ ...customer, [e.target.name]: e.target.value });
 
@@ -166,9 +168,9 @@ useEffect(() => {
             ...prev,
             place: `${postOffice.Name}, ${postOffice.District}`
           }));
-          toast.success(`Location matched: ${postOffice.District}`, { icon: '📍', style: { borderRadius: '14px', background: '#111', color: '#fff' }});
+          toast.success(`Location matched: ${postOffice.District}`, { icon: '📍', style: { borderRadius: '14px', background: '#111', color: '#fff' } });
         } else {
-          toast.error("Invalid Pincode", { style: { borderRadius: '14px', background: '#111', color: '#fff' }});
+          toast.error("Invalid Pincode", { style: { borderRadius: '14px', background: '#111', color: '#fff' } });
         }
       } catch {
         toast.error("Failed to verify pincode");
@@ -200,15 +202,13 @@ useEffect(() => {
     const price = Number(ip.price) || 0;
     const qty = Number(ip.quantity) || 0;
     const total = price * qty;
-    return { ...ip, price, total, qty }; 
+    return { ...ip, price, total, qty };
   });
 
-  const totalQty = processedProducts.reduce((sum, p) => sum + p.qty, 0);
   const subtotal = processedProducts.reduce((sum, p) => sum + p.total, 0);
 
-  // Auto-Toggle Shipping Type Logic
-  const isFreeShipping = totalQty >= 4;
-  const effectiveShipping = isFreeShipping ? 0 : Number(shippingCharge || 0);
+  // Shipping Charge Logic
+  const effectiveShipping = Number(shippingCharge || 0);
   const grandTotal = subtotal + effectiveShipping;
 
   const displayDateStr = invoiceDate ? invoiceDate.split('-').reverse().join('/') : '';
@@ -216,7 +216,7 @@ useEffect(() => {
   // Save Invoice & Update Stock
   const handleSaveInvoice = async (e) => {
     e.preventDefault();
-    
+
     if (!customer.name || !customer.phone) {
       toast.error("Please fill required customer details");
       return;
@@ -231,7 +231,7 @@ useEffect(() => {
     setLoading(true);
     try {
       const stockChanges = {};
-      
+
       // If editing, add back old stock to offset the difference
       if (editId && location.state?.editInvoice?.products) {
         location.state.editInvoice.products.forEach(oldP => {
@@ -240,7 +240,7 @@ useEffect(() => {
           }
         });
       }
-      
+
       // Subtract newly defined quantities
       validProducts.forEach(newP => {
         if (newP.productId) {
@@ -262,7 +262,7 @@ useEffect(() => {
         }
       }
 
-        const finalProducts = validProducts.map((p, index) => {
+      const finalProducts = validProducts.map((p, index) => {
         // Allocate shipping charge to the first product to avoid double-counting in overall turnover totals
         const productShipping = index === 0 ? effectiveShipping : 0;
         const productGrandTotal = p.total + productShipping;
@@ -293,7 +293,7 @@ useEffect(() => {
         place: customer.place,
         pincode: customer.pincode,
         products: finalProducts,
-        shippingType: isFreeShipping ? "free" : "manual",
+        shippingType: "manual",
         shippingCharge: effectiveShipping,
         subtotal: subtotal,
         totalAmount: grandTotal,
@@ -320,7 +320,7 @@ useEffect(() => {
       }
 
       await update(ref(db), updates);
-      toast.success(editId ? "Invoice Updated Successfully!" : "Luxury Invoice Generated!", { style: { borderRadius: '14px', background: '#111', color: '#D4AF37' }});
+      toast.success(editId ? "Invoice Updated Successfully!" : "Luxury Invoice Generated!", { style: { borderRadius: '14px', background: '#111', color: '#D4AF37' } });
 
       if (editId) {
         navigate('/reports');
@@ -352,16 +352,16 @@ useEffect(() => {
       const pageHeight = pdf.internal.pageSize.getHeight();
       let imgHeight = (canvas.height * pdfWidth) / canvas.width;
       let imgWidth = pdfWidth;
-      
+
       if (imgHeight > pageHeight) {
         const ratio = pageHeight / imgHeight;
         imgHeight = pageHeight;
         imgWidth = pdfWidth * ratio;
       }
-      
+
       const offsetX = (pdfWidth - imgWidth) / 2;
       pdf.addImage(data, "PNG", offsetX, 0, imgWidth, imgHeight);
-      
+
       const pdfFilename = `${invoiceNumber.replace('-', ' -')}.pdf`;
       const pdfBlob = pdf.output("blob");
       const file = new File([pdfBlob], pdfFilename, { type: "application/pdf" });
@@ -369,7 +369,7 @@ useEffect(() => {
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: `Invoice ${invoiceNumber}`,  
+          title: `Invoice ${invoiceNumber}`,
         });
       } else {
         pdf.save(pdfFilename);
@@ -397,13 +397,13 @@ useEffect(() => {
     const pageHeight = pdf.internal.pageSize.getHeight();
     let imgHeight = (canvas.height * pdfWidth) / canvas.width;
     let imgWidth = pdfWidth;
-    
+
     if (imgHeight > pageHeight) {
       const ratio = pageHeight / imgHeight;
       imgHeight = pageHeight;
       imgWidth = pdfWidth * ratio;
     }
-    
+
     const offsetX = (pdfWidth - imgWidth) / 2;
     pdf.addImage(data, "PNG", offsetX, 0, imgWidth, imgHeight);
     pdf.save(`Ajeer_Graphy_Invoice_${invoiceNumber}.pdf`);
@@ -412,7 +412,7 @@ useEffect(() => {
   return (
     <div className="max-w-[1400px] mx-auto pb-10">
       <Toaster />
-      
+
       {/* Premium Hero Section */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10 flex justify-between items-end">
         <div>
@@ -422,10 +422,10 @@ useEffect(() => {
       </motion.div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        
+
         {/* Left Column - Form */}
         <motion.div variants={containerVariants} initial="hidden" animate="show" className="xl:col-span-7 space-y-8">
-          
+
           {/* Customer Details */}
           <motion.div variants={itemVariants} className="bg-white premium-shadow border border-gray-100 rounded-[30px] p-8 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37] blur-[80px] opacity-10 rounded-full group-hover:opacity-20 transition-opacity"></div>
@@ -449,9 +449,9 @@ useEffect(() => {
           {/* Order Items */}
           <motion.div variants={itemVariants} className="bg-white premium-shadow border border-gray-100 rounded-[30px] p-8">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-[#111] tracking-tight flex items-center gap-2"><FiPackage className="text-[#D4AF37]"/> Order Items</h3>
+              <h3 className="text-xl font-bold text-[#111] tracking-tight flex items-center gap-2"><FiPackage className="text-[#D4AF37]" /> Order Items</h3>
               <button onClick={addProductRow} className="bg-[#111] text-[#D4AF37] px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 hover:bg-black transition-colors shadow-md">
-                <FiPlus/> Add Product
+                <FiPlus /> Add Product
               </button>
             </div>
             <div className="space-y-4">
@@ -479,25 +479,25 @@ useEffect(() => {
                       />
                       <FiPackage className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     </div>
-                    
+
                     {/* Searchable Dropdown List */}
                     {activeDropdown === p.id && (
                       <div className="absolute z-50 w-full bg-white border border-gray-100 rounded-xl shadow-2xl max-h-60 overflow-y-auto mt-2">
                         {availableProducts
                           .filter(ap => ap.productName.toLowerCase().includes(p.productName.toLowerCase()))
                           .map(ap => (
-                          <div
-                            key={ap.id}
-                            className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
-                            onClick={() => {
-                              updateProductRowMulti(p.id, { productId: ap.id, productName: ap.productName, price: ap.sellingPrice });
-                              setActiveDropdown(null);
-                            }}
-                          >
-                            <div className="font-bold text-sm text-[#111]">{ap.productName}</div>
-                            <div className="text-xs text-gray-500">Stock: {ap.stock} • ₹{ap.sellingPrice}</div>
-                          </div>
-                      ))}
+                            <div
+                              key={ap.id}
+                              className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
+                              onClick={() => {
+                                updateProductRowMulti(p.id, { productId: ap.id, productName: ap.productName, price: ap.sellingPrice });
+                                setActiveDropdown(null);
+                              }}
+                            >
+                              <div className="font-bold text-sm text-[#111]">{ap.productName}</div>
+                              <div className="text-xs text-gray-500">Stock: {ap.stock} • ₹{ap.sellingPrice}</div>
+                            </div>
+                          ))}
                         {p.productName.trim() !== "" && !availableProducts.find(ap => ap.productName.toLowerCase() === p.productName.toLowerCase()) && (
                           <div className="p-3 bg-blue-50/50 text-xs font-semibold text-blue-600 italic rounded-b-xl border-t border-blue-100">
                             Manual Entry: "{p.productName}"
@@ -506,16 +506,16 @@ useEffect(() => {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="w-full md:w-32 relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">₹</span>
-                    <input 
-                      type="number" 
-                      min="0" 
-                      value={p.price} 
-                      onChange={(e) => updateProductRow(p.id, "price", e.target.value)} 
-                      className="w-full bg-white border border-gray-200 focus:border-[#D4AF37]/50 rounded-xl text-sm font-semibold text-[#111] outline-none transition-all p-3.5 pl-8" 
-                      placeholder="Price" 
+                    <input
+                      type="number"
+                      min="0"
+                      value={p.price}
+                      onChange={(e) => updateProductRow(p.id, "price", e.target.value)}
+                      className="w-full bg-white border border-gray-200 focus:border-[#D4AF37]/50 rounded-xl text-sm font-semibold text-[#111] outline-none transition-all p-3.5 pl-8"
+                      placeholder="Price"
                     />
                   </div>
                   <div className="w-full md:w-24 relative">
@@ -535,17 +535,18 @@ useEffect(() => {
 
           {/* Shipping Logic */}
           <motion.div variants={itemVariants} className="bg-white premium-shadow border border-gray-100 rounded-[30px] p-8">
-            <h3 className="text-xl font-bold text-[#111] mb-6 tracking-tight">Shipping</h3>
-            {isFreeShipping ? (
-              <div className="bg-green-50/80 text-green-600 border border-green-200 rounded-2xl p-5 font-bold flex items-center justify-center gap-2 text-lg shadow-sm">
-                <FiCheckCircle className="text-xl"/> Ultra Premium Free Shipping Applied (4+ items)
-              </div>
-            ) : (
-              <div className="relative group/input max-w-md">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                <input type="number" min="0" placeholder="Custom Shipping Charge" value={shippingCharge} onChange={(e) => setShippingCharge(e.target.value)} className="w-full bg-gray-50 hover:bg-gray-100/50 border border-transparent focus:bg-white focus:border-[#D4AF37]/40 rounded-2xl text-sm font-semibold text-[#111] outline-none transition-all p-5 pl-10" />
-              </div>
-            )}
+            <h3 className="text-xl font-bold text-[#111] mb-6 tracking-tight">Shipping Charge</h3>
+            <div className="relative group/input max-w-md">
+              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+              <input
+                type="number"
+                min="0"
+                placeholder="Shipping Charge"
+                value={shippingCharge}
+                onChange={(e) => setShippingCharge(e.target.value)}
+                className="w-full bg-gray-50 hover:bg-gray-100/50 border border-transparent focus:bg-white focus:border-[#D4AF37]/40 rounded-2xl text-sm font-semibold text-[#111] outline-none transition-all p-5 pl-10"
+              />
+            </div>
           </motion.div>
 
           {/* Payment Status & Invoice Date */}
@@ -564,33 +565,33 @@ useEffect(() => {
                   </button>
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="text-xl font-bold text-[#111] mb-6 tracking-tight flex items-center gap-2">
                   <FiClock className="text-[#D4AF37]" /> Invoice Date
                 </h3>
-                <input 
-                  type="date" 
-                  value={invoiceDate} 
-                  onChange={(e) => setInvoiceDate(e.target.value)} 
-                  className="w-full bg-gray-50 hover:bg-gray-100/50 border border-transparent focus:bg-white focus:border-[#D4AF37]/40 rounded-2xl text-sm font-semibold text-[#111] outline-none transition-all p-4" 
-                  required 
+                <input
+                  type="date"
+                  value={invoiceDate}
+                  onChange={(e) => setInvoiceDate(e.target.value)}
+                  className="w-full bg-gray-50 hover:bg-gray-100/50 border border-transparent focus:bg-white focus:border-[#D4AF37]/40 rounded-2xl text-sm font-semibold text-[#111] outline-none transition-all p-4"
+                  required
                 />
               </div>
             </div>
           </motion.div>
-          
+
           {/* Actions */}
           <motion.div variants={itemVariants} className="bg-[#111] p-6 rounded-[30px] premium-shadow flex flex-col sm:flex-row gap-4 relative overflow-hidden">
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#D4AF37] blur-[70px] opacity-20 rounded-full"></div>
             <button onClick={handleSaveInvoice} disabled={loading} className="flex-1 bg-[#D4AF37] text-[#111] px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-yellow-400 transition-all shadow-[0_10px_30px_-10px_rgba(212,175,55,0.4)] disabled:opacity-70 z-10 text-lg tracking-wide">
-              {loading ? <FiLoader className="animate-spin text-xl"/> : <><FiSave className="text-xl"/> {editId ? "Update & Save Invoice" : "Generate & Save Invoice"}</>}
+              {loading ? <FiLoader className="animate-spin text-xl" /> : <><FiSave className="text-xl" /> {editId ? "Update & Save Invoice" : "Generate & Save Invoice"}</>}
             </button>
-          <button onClick={handleShare} disabled={isSharing} className="bg-white/10 border border-white/5 text-white hover:bg-[#D4AF37] hover:text-[#111] hover:border-[#D4AF37] px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all z-10 disabled:opacity-70">
-            {isSharing ? <FiLoader className="animate-spin text-xl"/> : <><FiShare2 className="text-xl"/> Share</>}
+            <button onClick={handleShare} disabled={isSharing} className="bg-white/10 border border-white/5 text-white hover:bg-[#D4AF37] hover:text-[#111] hover:border-[#D4AF37] px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all z-10 disabled:opacity-70">
+              {isSharing ? <FiLoader className="animate-spin text-xl" /> : <><FiShare2 className="text-xl" /> Share</>}
             </button>
-          <button onClick={downloadPDF} className="bg-white/10 border border-white/5 text-white hover:bg-[#D4AF37] hover:text-[#111] hover:border-[#D4AF37] px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all z-10">
-              <FiDownload className="text-xl"/> PDF
+            <button onClick={downloadPDF} className="bg-white/10 border border-white/5 text-white hover:bg-[#D4AF37] hover:text-[#111] hover:border-[#D4AF37] px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all z-10">
+              <FiDownload className="text-xl" /> PDF
             </button>
           </motion.div>
         </motion.div>
@@ -598,20 +599,20 @@ useEffect(() => {
         {/* Right Column - Invoice Preview */}
         <motion.div variants={containerVariants} initial="hidden" animate="show" className="xl:col-span-5 flex flex-col h-auto overflow-visible">
           <h3 className="text-xl font-bold text-[#111] tracking-tight mb-6 font-['Poppins']">Live Preview</h3>
-          
+
           <div className="w-full h-auto overflow-visible">
             <div ref={invoiceRef} className="bg-white w-full h-auto p-6 sm:p-8 flex flex-col relative text-[#111] rounded-[20px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] border border-[#D4AF37]/20 overflow-visible font-['Poppins']">
-              
+
               {/* Accent Header Bar */}
               <div className="absolute top-0 left-0 w-full h-1.5 sm:p-2 bg-gradient-to-r from-[#111] via-[#1d164a] to-[#111] rounded-t-[20px]"></div>
-              
+
               {/* Company Logo & Invoice Info */}
               <div className="flex justify-between items-start mt-2 mb-6 gap-6">
                 <div className="flex flex-col max-w-[50%]">
                   <img src={logoIcon} alt="Company Logo" className="h-12 object-contain object-left mix-blend-multiply" />
                 </div>
                 <div className="text-right">
-                  <p className="text-[9px] font-bold text-[#202687] tracking-widest uppercase mb-1.5">Invoice</p> 
+                  <p className="text-[9px] font-bold text-[#202687] tracking-widest uppercase mb-1.5">Invoice</p>
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">No: <span className="text-[#111]">{invoiceNumber}</span></p>
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Date: <span className="text-[#111]">{displayDateStr}</span></p>
                 </div>
@@ -628,7 +629,7 @@ useEffect(() => {
 
               {/* Products Table */}
               <div className="flex-1 overflow-visible mb-4">
-                <table className="w-full text-left border-collapse"> 
+                <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className="pb-2 text-[9px] font-bold uppercase tracking-widest text-[#202687]">Description</th>
@@ -659,7 +660,7 @@ useEffect(() => {
               </div>
 
               {/* Totals Section */}
-              <div className="ml-auto w-full sm:w-2/3 lg:w-3/4 pt-2 border-t-2 border-[#111]"> 
+              <div className="ml-auto w-full sm:w-2/3 lg:w-3/4 pt-2 border-t-2 border-[#111]">
                 <div className="space-y-2 mt-3">
                   <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-wider">
                     <span>Subtotal</span>
@@ -675,7 +676,7 @@ useEffect(() => {
                   </div>
                 </div>
               </div>
-              <h3 className="text-[8px] font-bold text-gray-400 text-center uppercase tracking-widest mt-8">Thank you for choosing WEHELP</h3> 
+              <h3 className="text-[8px] font-bold text-gray-400 text-center uppercase tracking-widest mt-8">Thank you for choosing Calligraphy tools Store</h3>
 
               {/* Accent footer Bar */}
               <div className="absolute bottom-0 left-0 w-full h-1.5 sm:p-2 bg-gradient-to-r from-[#111] via-[#322873] to-[#111] rounded-b-[20px]"></div>

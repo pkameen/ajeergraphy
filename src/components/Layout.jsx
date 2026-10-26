@@ -42,11 +42,11 @@ export default function Layout({ children }) {
             {/* Profile Avatar Section */}
             <div className="flex items-center gap-3 cursor-pointer group">
               <div className="w-11 h-11 rounded-full bg-[#111] text-[#D4AF37] flex items-center justify-center font-bold text-lg shadow-lg group-hover:scale-105 transition-transform">
-                W
+                C
               </div>
               <div className="hidden lg:block">
                 <p className="text-sm font-bold text-[#111] leading-none">Admin</p>
-                <p className="text-xs text-gray-400 mt-1 font-medium">WEHELP</p>
+                <p className="text-xs text-gray-400 mt-1 font-medium">Calligraphy Story</p>
               </div>
               <FiChevronDown className="hidden lg:block text-gray-400 group-hover:text-[#111] transition-colors" />
             </div>
